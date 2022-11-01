@@ -1,0 +1,148 @@
+//
+// information from IRD is here:
+//https://www.ird.govt.nz/-/media/project/ir/home/documents/income-tax/withholding-taxes/rwt-nrwt-withholding-tax-certificate/2020-rwt-and-nrwt-certificate-filing-specification.pdf?modified=20201016012133
+//
+
+package com.example.validaton;
+
+import com.sun.istack.internal.NotNull;
+
+public class Main {  //1
+
+    public static void message(String error) { //2
+        System.out.println(error);
+    } //2
+
+
+    public static int calculateModulus(int [] WeightFactor, @NotNull String IRDNumber) {
+        int totalSum = 0;
+
+        int CalculatedCheckDigit;
+
+        char[] CharIRDumber = IRDNumber.toCharArray();
+
+        message("Calculating modulus: " + IRDNumber);
+
+        //loop through the account number and multiply the weightfactor and IRDNumberdigit together
+        for (int counter = 0; counter < IRDNumber.length(); counter++) {//3
+            //convert the current account number digit from a string to an integer
+            int IntIRDNumberDigit = Integer.parseInt(String.valueOf(CharIRDumber[counter]));
+            //mutiply the account digit by the modulus number
+            int sum = IntIRDNumberDigit * (int) WeightFactor[counter];
+            // print out the result
+            System.out.println("(" + IntIRDNumberDigit + " x " + WeightFactor[counter] + ") = " + sum);
+            // Sum together the products of the weight factors and their associated
+            //digits.
+            totalSum += sum;
+        }//3
+        System.out.println("Total sum =" + totalSum);
+
+        // Divide the sum by 11. If the remainder is 0 then the calculated check digit
+        // is 0.
+        if (( totalSum % 11 ) == 0 ) {//3
+            CalculatedCheckDigit = totalSum % 11;
+            message("CalculatedCheckDigit = " + CalculatedCheckDigit);
+
+        }//3
+        else {//3
+            CalculatedCheckDigit = 11 - (totalSum % 11);
+            message("Calculated Check Digit = " + CalculatedCheckDigit);
+        }//3
+
+        // if CalculatedCheckDigit > 10 then something went wrong!
+        if (CalculatedCheckDigit > 10 ) {
+            message("CalculatedCheckDigit > 10");
+        }
+
+        return CalculatedCheckDigit;
+    }
+
+    public static void main(String[] args) { //2
+
+    // if the IRD number has spaces/hyphens in it, clean it up.
+    String StringIRDNumber;
+    String StringIRDNumberCheckDigit;
+
+    int IntCalculatedCheckDigit;
+    int IntSecondaryCalculatedCheckDigit;
+
+    int [] IntWeightFactor = new int[] {3,2,7,6,5,4,3,2};
+    int [] IntSecondaryWeightFactor = new int[] {7,4,3,2,5,2,7,6};
+
+    //convert the IRD number to an Int
+    //example numbers from the IRD PDF:
+    //int IntIRDNumber = 49091850; // The number is valid.
+    //int IntIRDNumber = 35901981; // The number is valid.
+    //int IntIRDNumber = 49098576; // The number is valid.
+    //int IntIRDNumber = 136410132; // The number is valid.
+    //int IntIRDNumber = 136410133; // The number is invalid.
+    //int IntIRDNumber = 9125568; // The number is invalid.
+
+    message("Step 1");
+    // Check the range
+    // If the IRD number is < 10-000-000 or > 150-000-000 then the number is invalid.
+    if (IntIRDNumber > 150000000 || IntIRDNumber  < 10000000) { //3
+        message("IRD number is out of range, it must be between 10-000-000 and 150-000-000 ");
+    }//3
+
+    message("Step 2");
+    // Remove the trailing check digit.
+    // convert int to string
+    StringIRDNumber = Integer.toString(IntIRDNumber);
+
+    //store the check digit
+    StringIRDNumberCheckDigit = StringIRDNumber.substring( StringIRDNumber.length() - 1 , StringIRDNumber.length() );
+    //store the IRD number, removing the check digit
+    StringIRDNumber = StringIRDNumber.substring(0, StringIRDNumber.length() - 1 );
+
+    message("IRDNumberCheckDigit" + StringIRDNumberCheckDigit);
+
+    // If the resulting number is seven digits long, pad to eight digits by adding a leading zero
+    if (StringIRDNumber.length() == 7 ) {//3
+        message("Padding the IRD number: " + StringIRDNumber);
+        StringIRDNumber = "0" + StringIRDNumber;
+            }//3
+
+    message("Step 3");
+    // To each of the base number’s eight digits a weight factor is assigned. From
+    //left to right these are: 3, 2, 7, 6, 5, 4, 3, 2.
+
+    IntCalculatedCheckDigit = calculateModulus( IntWeightFactor,StringIRDNumber);
+
+    // If the calculated check digit is 10, continue with step 4.
+
+    message("calc digit = " + IntCalculatedCheckDigit);
+
+
+    if (IntCalculatedCheckDigit == 10 ) {//3
+        // If the calculated check digit is 10, continue with step 4, calculate another modulus
+        IntCalculatedCheckDigit  = calculateModulus( IntSecondaryWeightFactor,StringIRDNumber);
+    }//3
+
+       // figure out if the IRD number is valid
+       // If the remainder is not 0 then subtract the remainder from 11, giving the
+       // calculated check digit.
+       if (IntCalculatedCheckDigit == 0) {
+           message("Ird number " + IntIRDNumber + " is valid. Check digit is " + IntCalculatedCheckDigit);
+       }
+       else if (IntCalculatedCheckDigit > 0 ||  IntCalculatedCheckDigit <= 9 ) {
+                       // Compare the calculated check digit to the last digit of the original IRD
+                       //   number.
+                       // If they match, the IRD number is valid
+                       if (IntCalculatedCheckDigit == Integer.parseInt(StringIRDNumberCheckDigit)  ) { //5
+                           message("Ird number " + IntIRDNumber + " is valid. Check digit is " + IntCalculatedCheckDigit);
+                       } //5
+                       else{ //5
+                           message("Ird number " + IntIRDNumber + " is invalid. Check digit is " + IntCalculatedCheckDigit);
+                       } //5
+               } //4
+       else {
+           // If the calculated check digit is 10, the IRD number is invalid.
+           message("Ird number " + IntIRDNumber + " is invalid. Check digit is " + IntCalculatedCheckDigit);
+       }
+        //} //3
+    } //2
+} //1
+
+
+
